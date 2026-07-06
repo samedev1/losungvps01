@@ -15,8 +15,21 @@ app.use(express.json({ limit: '10mb' }));
 
 // Middleware para reescrever URLs no Netlify Functions (corrige rotas no Express Serverless)
 app.use((req, res, next) => {
+  // Remove o prefixo do Netlify se estiver presente
   if (req.url.startsWith("/.netlify/functions/api")) {
     req.url = req.url.replace("/.netlify/functions/api", "/api");
+  }
+  
+  // Normaliza caso o path seja cortado pelo serverless-http (ex: /scan -> /api/scan)
+  if (!req.url.startsWith("/api")) {
+    const cleanPath = req.url.split("?")[0];
+    if (cleanPath === "/scan" || cleanPath.startsWith("/scan/")) {
+      req.url = "/api" + req.url;
+    } else if (cleanPath === "/scans" || cleanPath.startsWith("/scans/")) {
+      req.url = "/api" + req.url;
+    } else if (cleanPath === "/stats" || cleanPath.startsWith("/stats/")) {
+      req.url = "/api" + req.url;
+    }
   }
   next();
 });
