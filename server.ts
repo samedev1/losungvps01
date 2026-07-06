@@ -13,6 +13,14 @@ const DB_FILE = path.join(process.cwd(), "scans_db.json");
 // Parse JSON bodies
 app.use(express.json({ limit: '10mb' }));
 
+// Middleware para reescrever URLs no Netlify Functions (corrige rotas no Express Serverless)
+app.use((req, res, next) => {
+  if (req.url.startsWith("/.netlify/functions/api")) {
+    req.url = req.url.replace("/.netlify/functions/api", "/api");
+  }
+  next();
+});
+
 // In-memory database fallback for serverless environments (like Netlify)
 let memoryDb: DriverProfile[] = [];
 
