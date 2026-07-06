@@ -1,0 +1,6 @@
+{
+  "name": "Investigador Cadastral - Telefone, CPF e Web Score",
+  "description": "Sistema avançado de scan investigativo que cruza dados cadastrais de número de telefone, CPF, reputação/score na web e avalia a confiabilidade para pagamentos em PIX.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
