@@ -13,25 +13,36 @@ const DB_FILE = path.join(process.cwd(), "scans_db.json");
 // Parse JSON bodies
 app.use(express.json({ limit: '10mb' }));
 
+// In-memory database fallback for serverless environments (like Netlify)
+let memoryDb: DriverProfile[] = [];
+
 // Helper to load database
 function loadDatabase(): DriverProfile[] {
   try {
     if (fs.existsSync(DB_FILE)) {
       const data = fs.readFileSync(DB_FILE, "utf-8");
-      return JSON.parse(data);
+      const parsed = JSON.parse(data);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        memoryDb = parsed;
+        return parsed;
+      }
     }
   } catch (error) {
-    console.error("Erro ao carregar o banco de dados:", error);
+    console.warn("Erro ao carregar o banco de dados:", error);
   }
-  return [];
+  if (memoryDb.length === 0) {
+    memoryDb = [...DEFAULT_SEED];
+  }
+  return memoryDb;
 }
 
 // Helper to save database
 function saveDatabase(data: DriverProfile[]) {
+  memoryDb = data;
   try {
     fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), "utf-8");
   } catch (error) {
-    console.error("Erro ao salvar o banco de dados:", error);
+    console.warn("Aviso: Restrição de escrita no disco (comum em ambiente serverless/Netlify):", error?.message || error);
   }
 }
 
@@ -777,4 +788,9 @@ async function startServer() {
   });
 }
 
-startServer();
+// ---------------- EXPORT APP FOR SERVERLESS / NETLIFY ----------------
+export { app };
+
+if (process.env.NETLIFY !== "true" && !process.env.LAMBDA_TASK_ROOT) {
+  startServer();
+}
